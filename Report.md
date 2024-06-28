@@ -5,6 +5,5 @@
 Number of reviews: 50
 
 ## Sentiment Distribution
-Positive reviews: 100.00%
+Positive reviews: 24.00%
 Negative reviews: 76.00%
-Neutral reviews: 76.00%
