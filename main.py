@@ -9,7 +9,7 @@ reviews_df = pd.read_excel('user_review.xls')
 column_name = 'review'
 columns_to_keep = [column_name]
 
-
+#Clean the data
 reviews_df = reviews_df[columns_to_keep]
 reviews_df.dropna(inplace=True)
 
