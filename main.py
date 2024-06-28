@@ -41,7 +41,6 @@ Number of reviews: {len(reviews_df)}
 ## Sentiment Distribution
 Positive reviews: {sentiment_distribution[0.5:].sum():.2f}%
 Negative reviews: {sentiment_distribution[:0.5].sum():.2f}%
-Neutral reviews: {sentiment_distribution[0.5:0.5].sum():.2f}%
 """
 
 with open('Report.md', 'w') as file:
