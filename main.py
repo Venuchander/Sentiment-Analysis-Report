@@ -6,7 +6,6 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
-# Download necessary NLTK data
 nltk.download('punkt', quiet=True)
 nltk.download('stopwords', quiet=True)
 nltk.download('wordnet', quiet=True)
@@ -19,11 +18,9 @@ reviews_df = pd.read_excel('user_review.xls')
 column_name = 'review'
 columns_to_keep = ['id', column_name]
 
-# Clean the data
 reviews_df = reviews_df[columns_to_keep]
 reviews_df.dropna(inplace=True)
 
-# Initialize lemmatizer and stopwords
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words('english'))
 
@@ -37,16 +34,14 @@ def preprocess_text(text):
 
 reviews_df['processed_review'] = reviews_df[column_name].apply(preprocess_text)
 
-# Initialize VADER sentiment analyzer
 sia = SentimentIntensityAnalyzer()
 
-# Perform sentiment analysis
+# Sentiment analysis
 def get_sentiment(text):
     return sia.polarity_scores(text)['compound']
 
 reviews_df['sentiment_score'] = reviews_df['processed_review'].apply(get_sentiment)
 
-# Categorize sentiment
 def categorize_sentiment(score):
     if score <= -0.05:
         return 'Negative'
@@ -55,11 +50,10 @@ def categorize_sentiment(score):
 
 reviews_df['sentiment_category'] = reviews_df['sentiment_score'].apply(categorize_sentiment)
 
-# Generate summary report
 sentiment_counts = reviews_df['sentiment_category'].value_counts()
 sentiment_distribution = sentiment_counts / len(reviews_df) * 100
 
-# Generate the markdown report
+# Generate the md report
 report = f"""
 # Sentiment Analysis Report
 
@@ -79,7 +73,7 @@ Negative reviews: {sentiment_distribution['Negative']:.2f}%
 {reviews_df.nsmallest(5, 'sentiment_score')[['id', column_name]].to_markdown(index=False)}
 """
 
-with open('Sentiment_Analysis_Report.md', 'w') as file:
+with open('Report.md', 'w') as file:
     file.write(report)
 
-print("Markdown report generated as 'Sentiment_Analysis_Report.md'.")
+print("Markdown report generated as 'Report.md'.")
