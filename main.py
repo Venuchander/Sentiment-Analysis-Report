@@ -1,37 +1,65 @@
 import re
-from textblob import TextBlob
 import pandas as pd
+import nltk
+from nltk.sentiment import SentimentIntensityAnalyzer
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 
-#Load the dataset
+# Download necessary NLTK data
+nltk.download('punkt', quiet=True)
+nltk.download('stopwords', quiet=True)
+nltk.download('wordnet', quiet=True)
+nltk.download('vader_lexicon', quiet=True)
+
+# Load the dataset
 reviews_df = pd.read_excel('user_review.xls')
 
-#Specify the column name containing the review text
+# Specify the column name containing the review text
 column_name = 'review'
-columns_to_keep = [column_name]
+columns_to_keep = ['id', column_name]
 
-#Clean the data
+# Clean the data
 reviews_df = reviews_df[columns_to_keep]
 reviews_df.dropna(inplace=True)
 
-#Perform text preprocessing
+# Initialize lemmatizer and stopwords
+lemmatizer = WordNetLemmatizer()
+stop_words = set(stopwords.words('english'))
+
+# Improved text preprocessing
 def preprocess_text(text):
     text = text.lower()
-    text = re.sub(r'[^\w\s]', '', text)
-    return text
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
+    tokens = word_tokenize(text)
+    tokens = [lemmatizer.lemmatize(token) for token in tokens if token not in stop_words]
+    return ' '.join(tokens)
 
-reviews_df[column_name] = reviews_df[column_name].apply(preprocess_text)
+reviews_df['processed_review'] = reviews_df[column_name].apply(preprocess_text)
 
-#Perform sentiment analysis
+# Initialize VADER sentiment analyzer
+sia = SentimentIntensityAnalyzer()
+
+# Perform sentiment analysis
 def get_sentiment(text):
-    blob = TextBlob(text)
-    return blob.sentiment.polarity
+    return sia.polarity_scores(text)['compound']
 
-reviews_df['sentiment'] = reviews_df[column_name].apply(get_sentiment)
+reviews_df['sentiment_score'] = reviews_df['processed_review'].apply(get_sentiment)
 
-#Generate summary report
-sentiment_counts = reviews_df['sentiment'].value_counts(bins=[-1, -0.5, 0.5, 1])
+# Categorize sentiment
+def categorize_sentiment(score):
+    if score <= -0.05:
+        return 'Negative'
+    else:
+        return 'Positive'
+
+reviews_df['sentiment_category'] = reviews_df['sentiment_score'].apply(categorize_sentiment)
+
+# Generate summary report
+sentiment_counts = reviews_df['sentiment_category'].value_counts()
 sentiment_distribution = sentiment_counts / len(reviews_df) * 100
 
+# Generate the markdown report
 report = f"""
 # Sentiment Analysis Report
 
@@ -39,9 +67,19 @@ report = f"""
 Number of reviews: {len(reviews_df)}
 
 ## Sentiment Distribution
-Positive reviews: {sentiment_distribution[0.5:].sum():.2f}%
-Negative reviews: {sentiment_distribution[:0.5].sum():.2f}%
+Positive reviews: {sentiment_distribution['Positive']:.2f}%  
+Negative reviews: {sentiment_distribution['Negative']:.2f}%
+
+## Top 5 Most Positive Reviews
+
+{reviews_df.nlargest(5, 'sentiment_score')[['id', column_name]].to_markdown(index=False)}
+
+## Top 5 Most Negative Reviews
+
+{reviews_df.nsmallest(5, 'sentiment_score')[['id', column_name]].to_markdown(index=False)}
 """
 
-with open('Report.md', 'w') as file:
+with open('Sentiment_Analysis_Report.md', 'w') as file:
     file.write(report)
+
+print("Markdown report generated as 'Sentiment_Analysis_Report.md'.")
