@@ -5,12 +5,12 @@ This repository contains a Python script for performing sentiment analysis on us
 
 ## Usage
 
-1. Place your user review excel file named `user_review.xls` in the project directory.
+Place your user review excel file named `user_review.xls` in the project directory.
 
-2. Run the script:
+### Install Dependencies
 
-```
-   pip install -r requirements.txt 
+```bash
+pip install -r requirements.txt
 ```
 
 ## Features
